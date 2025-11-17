@@ -46,7 +46,7 @@ class WaiterController extends Controller
     {
         return view('waiter.order.create', [
             'menus' => Menu::orderBy('namamenu')->get(),
-            'mejas' => Meja::orderBy('nomormeja')->get(), // jika belum ada meja, kirim collect([])
+            'mejas' => Meja::where('status', 'kosong')->orderBy('nomormeja')->get(),
             'pelanggans' => Pelanggan::orderBy('namapelanggan')->take(30)->get(),
             'back' => $request->query('back'),
         ]);
@@ -66,6 +66,13 @@ class WaiterController extends Controller
             'nohp' => 'nullable|string|max:20',
             'alamat' => 'nullable|string|max:255',
         ]);
+
+        if ($request->filled('idmeja')) {
+            $meja = Meja::where('idmeja', $request->idmeja)->first();
+            if (!$meja || $meja->status !== 'kosong') {
+                return back()->with('error', 'Meja sudah terisi, pilih meja lain.');
+            }
+        }
 
         DB::transaction(function () use ($request) {
             // tentukan pelanggan
